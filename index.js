@@ -4,12 +4,12 @@ const Log = require('./lib/logger')('index')
 let workers = []
 let file = {
   0: './src/snkrsCn.js',
-  1: './src/snkrsJp.js',
-  2: './src/snkrsUk.js',
-  3: './src/snkrsUs.js',
-  4: './src/juiceStore.js',
-  5: './src/kith.js',
-  6: './src/bdgastore.js',
+  // 1: './src/snkrsJp.js',
+  // 2: './src/snkrsUk.js',
+  // 3: './src/snkrsUs.js',
+  // 4: './src/juiceStore.js',
+  // 5: './src/kith.js',
+  // 6: './src/bdgastore.js',
   // 7: './src/yeezysupply.js'
 }
 

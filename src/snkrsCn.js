@@ -1,15 +1,14 @@
 const Request = require('../lib/request')
 const bearychat = require('bearyincoming')
 const moment = require('moment')
+const config = require('config');
 const MongoClient = require('mongodb').MongoClient
 const { subSet, distinct } = require('../lib/utils')
 const Log = require('../lib/logger')('snkrsCn')
 
-const dbUrl = 'mongodb://localhost:27017/runoob'
-const WEBHOOK_URL =
-  'https://hook.bearychat.com/=bwHsk/incoming/8f3470e3a9b43e807289ccdba8f4566d'
-const SNKRS_URL =
-  'https://api.nike.com/product_feed/threads/v2/?anchor=0&count=10&filter=marketplace%28CN%29&filter=language%28zh-Hans%29&filter=channelId%28010794e5-35fe-4e32-aaff-cd2c74f89d61%29&filter=exclusiveAccess%28true%2Cfalse%29&fields=active&fields=id&fields=lastFetchTime&fields=productInfo&fields=publishedContent.nodes&fields=publishedContent.properties.coverCard&fields=publishedContent.properties.productCard&fields=publishedContent.properties.products&fields=publishedContent.properties.publish.collections&fields=publishedContent.properties.relatedThreads&fields=publishedContent.properties.seo&fields=publishedContent.properties.threadType&fields=publishedContent.properties.custom&fields=publishedContent.properties.title'
+const dbUrl = config.DB_URL;
+const WEBHOOK_URL = config.WEBHOOK_URL;
+const SNKRS_URL = config.SNKRS_CN_URL;
 const headers = {
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
