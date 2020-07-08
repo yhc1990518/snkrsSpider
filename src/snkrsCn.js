@@ -1,7 +1,7 @@
 const Request = require('../lib/request')
 const bearychat = require('bearyincoming')
 const moment = require('moment')
-const config = require('config');
+const config = require('./config');
 const MongoClient = require('mongodb').MongoClient
 const { subSet, distinct } = require('../lib/utils')
 const Log = require('../lib/logger')('snkrsCn')
