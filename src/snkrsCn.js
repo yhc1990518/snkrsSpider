@@ -26,8 +26,9 @@ class snkrsCn {
     try {
       data = await Request.get(SNKRS_URL, {}, headers)
     } catch (err) {
-      Log.info('爬取数据错误')
-      return {}
+      Log.info('爬取数据错误');
+      Log.error(err);
+      return {};
     }
 
     return data
