@@ -144,7 +144,8 @@ class snkrsCn {
                   .collection('snkrsCn')
                   .insertMany(insertData, function(err, res) {
                     if (err) {
-                      Log.error('插入数据库错误', err)
+                        Log.error('插入数据库错误')
+                        console.log(err)
                     }
                     Log.info(`上新 | ${res.insertedCount}`, insertData)
                     db.close()
