@@ -3,191 +3,191 @@ const bearychat = require('bearyincoming')
 const moment = require('moment')
 const config = require('./config');
 const MongoClient = require('mongodb').MongoClient
-const { subSet, distinct } = require('../lib/utils')
+const {subSet, distinct} = require('../lib/utils')
 const Log = require('../lib/logger')('snkrsCn')
 
 const dbUrl = config.DB_URL;
 const WEBHOOK_URL = config.WEBHOOK_URL;
 const SNKRS_URL = config.SNKRS_CN_URL;
 const headers = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
+    'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
 }
 
 class snkrsCn {
-  async index() {
-    let requestData = await this.fetchData()
+    async index() {
+        let requestData = await this.fetchData()
 
-    this.saveData(requestData, this)
-  }
-
-  async fetchData() {
-    let data = {}
-    try {
-      data = await Request.get(SNKRS_URL, {}, headers)
-    } catch (err) {
-      Log.info('爬取数据错误');
-      Log.error(err);
-      return {};
+        this.saveData(requestData, this)
     }
 
-    return data
-  }
+    async fetchData() {
+        let data = {}
+        try {
+            data = await Request.get(SNKRS_URL, {}, headers)
+        } catch (err) {
+            Log.info('爬取数据错误');
+            Log.error(err);
+            return {};
+        }
 
-  saveData(data, that) {
-    if (!data.objects) {
-      return
+        return data
     }
-    let shoesData = []
-    data.objects.length &&
-      data.objects.forEach(item => {
-        let title = item.publishedContent.properties.seo.title
-        title.search('发布日期') !== -1
-          ? (title = title.substr(0, title.length - 4))
-          : null
-        item.publishedContent.properties.custom.restricted
-          ? (title = `【专属】 ${title}`)
-          : null
 
-        if (item.productInfo && item.productInfo.length) {
-          item.productInfo.forEach(ele => {
-            let stock = ''
-            ele.skus.length &&
-              ele.skus.forEach(cont => {
-                stock =
-                  stock === '' ? cont.nikeSize : `${stock}, ${cont.nikeSize}`
-              })
-
-            const method = ele.launchView
-              ? ele.launchView.method
-              : ele.merchProduct.publishType
-
-            const time = ele.launchView
-              ? moment(ele.launchView.startEntryDate).format(
-                  'YYYY-MM-DD HH:mm:ss'
-                )
-              : moment(ele.merchProduct.commerceStartDate).format(
-                  'YYYY-MM-DD HH:mm:ss'
-                )
-
-            shoesData.push({
-              title:
-                ele.merchProduct.productType === 'APPAREL'
-                  ? `【服装系列】 ${title}`
-                  : title,
-              method,
-              time,
-              stock,
-              activity: false,
-              id: ele.availability.productId,
-              subtitle: ele.productContent.subtitle,
-              price: ele.merchPrice.currentPrice,
-              styleColor: ele.merchProduct.styleColor,
-              image: ele.imageUrls.productImageUrl
-            })
-          })
-        } else {
-          shoesData.push({
-            activity: true,
-            id: item.publishedContent.properties.coverCard.id,
-            title: `【新活动】 ${item.publishedContent.properties.coverCard
-              .properties.title ||
-              title ||
-              '-'}`,
-            subtitle:
-              item.publishedContent.properties.coverCard.properties.subtitle ||
-              item.publishedContent.properties.seo.description ||
-              '-',
-            image:
-              item.publishedContent.properties.coverCard.properties.portraitURL
-          })
+    saveData(data, that) {
+        if (!data.objects) {
+            return
         }
-      })
+        let shoesData = []
+        data.objects.length &&
+        data.objects.forEach(item => {
+            let title = item.publishedContent.properties.seo.title
+            title.search('发布日期') !== -1
+                ? (title = title.substr(0, title.length - 4))
+                : null
+            item.publishedContent.properties.custom.restricted
+                ? (title = `【专属】 ${title}`)
+                : null
 
-    // 查询是否有该鞋款
-    let whereId = shoesData.map(item => item.id)
-    let insertData = []
-    MongoClient.connect(
-      dbUrl,
-      { useNewUrlParser: true, useUnifiedTopology: true },
-      function(err, db) {
-        if (err) {
-          Log.error('打开数据库错误', err)
-        }
-        var dbo = db.db('runoob')
-        dbo
-          .collection('snkrsCn')
-          .find({ id: { $in: whereId } })
-          .toArray(function(err, result) {
-            if (err) {
-              Log.error('查询数据库错误', err)
+            if (item.productInfo && item.productInfo.length) {
+                item.productInfo.forEach(ele => {
+                    let stock = ''
+                    ele.skus.length &&
+                    ele.skus.forEach(cont => {
+                        stock =
+                            stock === '' ? cont.nikeSize : `${stock}, ${cont.nikeSize}`
+                    })
+
+                    const method = ele.launchView
+                        ? ele.launchView.method
+                        : ele.merchProduct.publishType
+
+                    const time = ele.launchView
+                        ? moment(ele.launchView.startEntryDate).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        )
+                        : moment(ele.merchProduct.commerceStartDate).format(
+                            'YYYY-MM-DD HH:mm:ss'
+                        )
+
+                    shoesData.push({
+                        title:
+                            ele.merchProduct.productType === 'APPAREL'
+                                ? `【服装系列】 ${title}`
+                                : title,
+                        method,
+                        time,
+                        stock,
+                        activity: false,
+                        id: ele.availability.productId,
+                        subtitle: ele.productContent.subtitle,
+                        price: ele.merchPrice.currentPrice,
+                        styleColor: ele.merchProduct.styleColor,
+                        image: ele.imageUrls.productImageUrl
+                    })
+                })
+            } else {
+                shoesData.push({
+                    activity: true,
+                    id: item.publishedContent.properties.coverCard.id,
+                    title: `【新活动】 ${item.publishedContent.properties.coverCard
+                        .properties.title ||
+                    title ||
+                    '-'}`,
+                    subtitle:
+                        item.publishedContent.properties.coverCard.properties.subtitle ||
+                        item.publishedContent.properties.seo.description ||
+                        '-',
+                    image:
+                    item.publishedContent.properties.coverCard.properties.portraitURL
+                })
             }
-            if (!result.length) {
-              insertData = shoesData
-            } else if (
-              result.length &&
-              whereId.length &&
-              result.length !== whereId.length
-            ) {
-              // 取差集
-              insertData = subSet(shoesData, result)
-            }
+        })
 
-            if (insertData.length) {
-              // 去重
-              insertData = distinct(insertData)
-
-              insertData.length && that.sendMessage(insertData)
-
-              insertData.length &&
+        // 查询是否有该鞋款
+        let whereId = shoesData.map(item => item.id)
+        let insertData = []
+        MongoClient.connect(
+            dbUrl,
+            {useNewUrlParser: true, useUnifiedTopology: true},
+            function (err, db) {
+                if (err) {
+                    Log.error('打开数据库错误', err)
+                }
+                var dbo = db.db('runoob')
                 dbo
-                  .collection('snkrsCn')
-                  .insertMany(insertData, function(err, res) {
-                    if (err) {
-                        Log.error('插入数据库错误')
-                        console.log(err)
-                    }
-                    Log.info(`上新 | ${res.insertedCount}`, insertData)
-                    db.close()
-                  })
+                    .collection('snkrsCn')
+                    .find({id: {$in: whereId}})
+                    .toArray(function (err, result) {
+                        if (err) {
+                            Log.error('查询数据库错误', err)
+                        }
+                        if (!result.length) {
+                            insertData = shoesData
+                        } else if (
+                            result.length &&
+                            whereId.length &&
+                            result.length !== whereId.length
+                        ) {
+                            // 取差集
+                            insertData = subSet(shoesData, result)
+                        }
+
+                        if (insertData.length) {
+                            // 去重
+                            insertData = distinct(insertData)
+
+                            insertData.length && that.sendMessage(insertData)
+
+                            insertData.length &&
+                            dbo
+                                .collection('snkrsCn')
+                                .insertMany(insertData, function (err, res) {
+                                    if (err) {
+                                        Log.error('插入数据库错误')
+                                        console.log(err)
+                                    }
+                                    Log.info(`上新 | ${res.insertedCount}`, insertData)
+                                    db.close()
+                                })
+                        }
+
+                        db.close()
+                    })
             }
-
-            db.close()
-          })
-      }
-    )
-  }
-
-  async sendMessage(array) {
-    for await (let item of array) {
-      if (item.activity) {
-        bearychat
-          .withText(`${item.title}`)
-          .withAttachment({
-            title: item.subtitle,
-            text: '-',
-            color: '#ffa500',
-            images: [{ url: item.image }]
-          })
-          .pushTo(WEBHOOK_URL)
-      } else {
-        const content = `\n发售时间：${item.time}\n发售方式：${item.method === 'FLOW' ? 'FLOW 先到先得' : item.method === 'LEO' ? 'LEO 2分钟抽70%' : 'DAN 15分钟随机抽取'}\n价格：${item.price}\n货号：${item.styleColor}\nsize：${item.stock}`
-        bearychat
-          .withText(`${item.title}`)
-          .withAttachment({
-            title: item.subtitle,
-            text: content,
-            color: '#ffa500',
-            images: [{ url: item.image }]
-          })
-          .pushTo(WEBHOOK_URL)
-      }
+        )
     }
-  }
+
+    async sendMessage(array) {
+        for await (let item of array) {
+            if (item.activity) {
+                bearychat
+                    .withText(`${item.title}`)
+                    .withAttachment({
+                        title: item.subtitle,
+                        text: '-',
+                        color: '#ffa500',
+                        images: [{url: item.image}]
+                    })
+                    .pushTo(WEBHOOK_URL)
+            } else {
+                const content = `\n发售时间：${item.time}\n发售方式：${item.method === 'FLOW' ? 'FLOW 先到先得' : item.method === 'LEO' ? 'LEO 2分钟抽70%' : 'DAN 15分钟随机抽取'}\n价格：${item.price}\n货号：${item.styleColor}\nsize：${item.stock}`
+                bearychat
+                    .withText(`${item.title}`)
+                    .withAttachment({
+                        title: item.subtitle,
+                        text: content,
+                        color: '#ffa500',
+                        images: [{url: item.image}]
+                    })
+                    .pushTo(WEBHOOK_URL)
+            }
+        }
+    }
 }
 
 module.exports = new snkrsCn()
 
 setInterval(() => {
-  new snkrsCn().index()
+    new snkrsCn().index()
 }, 4000)
